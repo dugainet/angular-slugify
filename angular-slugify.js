@@ -109,25 +109,22 @@
     '円': 'yen', '﷼': 'rial', '₠': 'ecu', '¤': 'currency', '฿': 'baht',
     "$": 'dollar', '₹': 'indian rupee',
     // symbols
-    '©':'(c)', 'œ': 'oe', 'Œ': 'OE', '∑': 'sum', '®': '(r)', '†': '+',
+    '©':' ', 'œ': 'oe', 'Œ': 'OE', '∑': 'sum', '®': ' ', '†': '+',
     '“': '"', '”': '"', '‘': "'", '’': "'", '∂': 'd', 'ƒ': 'f', '™': 'tm',
     '℠': 'sm', '…': '...', '˚': 'o', 'º': 'o', 'ª': 'a', '•': '*',
     '∆': 'delta', '∞': 'infinity', '♥': 'love', '&': 'and', '|': 'or',
     '<': 'less', '>': 'greater',
         ' ': "",
         '¡': "!",
-        '¢': "c",
-        '£': "lb",
-        '¥': "yen",
+
         '¦': "|",
         '§': "SS",
         '¨': "\"",
-        '©': "(c)",
-        'ª': "a",
+
         '«': "<<",
         '¬': "not",
         '­': "-",
-        '®': "(R)",
+
         '°': "",
         '±': "",
         '²': "^2",
@@ -138,7 +135,7 @@
         '·': ".",
         '¸': ",",
         '¹': "",
-        'º': "o",
+
         '»': ">>",
         '¼': " 1/4 ",
         '½': " 1/2 ",
@@ -146,17 +143,58 @@
         '¿': ""
     };
 
-    function _slugify(s) {
-        if (!s) return "";
-        var ascii = [];
-        var ch, cp;
-        for (var i = 0; i < s.length; i++) {
-            if ((cp = s.charCodeAt(i)) < 0x180) {
-                ch = String.fromCharCode(cp);
-                ascii.push(charmap[ch] || ch);
+    var Downcoder = new Object();
+    Downcoder.Initialize = function()
+    {
+        if (Downcoder.map) // already made
+            return ;
+        Downcoder.map ={}
+        Downcoder.chars = '' ;
+
+        for (var c in charmap)
+        {
+            Downcoder.map[c] = charmap[c] ;
+            Downcoder.chars += c ;
+        }
+
+        Downcoder.regex = new RegExp('[' + Downcoder.chars + ']|[^' + Downcoder.chars + ']+','g') ;
+    }
+
+    var doCharmap = function( text )
+    {
+        Downcoder.Initialize() ;
+        var downcoded =""
+        var pieces = text.match(Downcoder.regex);
+        if(pieces)
+        {
+            for (var i = 0 ; i < pieces.length ; i++)
+            {
+                if (pieces[i].length == 1)
+                {
+                    var mapped = Downcoder.map[pieces[i]] ;
+                    if (mapped != null)
+                    {
+                        downcoded+=mapped;
+                        continue ;
+                    }
+                }
+                downcoded+=pieces[i];
             }
         }
-        s = ascii.join("");
+        else
+        {
+            downcoded = text;
+        }
+        return downcoded;
+    }
+
+
+    function _slugify(s) {
+        if (!s) return "";
+
+
+        s = doCharmap(s);
+
         s = s.replace(/[^-\w\s]/g, ''); // remove unneeded chars
         s = s.replace(/^\s+|\s+$/g, '') // trim leading/trailing spaces
         s = s.replace(/[-\s]+/g, '-')   // convert spaces to hyphens
